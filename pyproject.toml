@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "h5dataframe"
+description = "Proxy for pandas DataFrames that allows to store data on an hdf5 file."
+version = "0.1rc1"
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Matteo Bouvier", email = "m.bouvier@vidium-solutions.com"}
+]
+maintainers = [
+    {name = "Matteo Bouvier", email = "m.bouvier@vidium-solutions.com"}
+]
+readme = {file = "README.md", content-type="text/markdown"}
+dependencies = [
+    "ch5mpy",
+    "numpy",
+    "numpy_indexed",
+    "pandas",
+]
+keywords = []
+classifiers = []
+
+[tool.setuptools.packages.find]
+include = ["h5dataframe*"]
+
+[tool.vulture]
+paths = ["h5dataframe", "vulture_whitelist.py"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.mypy]
+strict = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = [
+    'numpy_indexed'
+]
+ignore_missing_imports = true
