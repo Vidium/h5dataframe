@@ -15,44 +15,36 @@ class H5DataFrame:
     Proxy for pandas DataFrames for storing data in an hdf5 file.
     """
 
-    __slots__ = "_data_numeric", "_data_string", "_index", "_columns", "_columns_order", "_file"
+    __slots__ = "_data_numeric", "_data_string", "_index", "_columns", "_columns_order", "_data"
 
     # region magic methods
-    def __init__(
-        self,
-        data_numeric: NDArrayLike[IF],
-        data_string: NDArrayLike[np.str_],
-        index: NDArrayLike[IFS],
-        columns: NDArrayLike[IFS],
-        columns_order: NDArrayLike[np.int_],
-        file: ch.H5Dict[Any] | None = None,
-    ):
+    def __init__(self, data: ch.H5Dict[Any]):
         """
         Args:
             file: an optional h5py group where this VDataFrame is read from.
         """
-        assert data_numeric.ndim == 2 and data_string.ndim == 2
-        assert data_numeric.shape[0] == data_string.shape[0]
-
-        self._data_numeric = data_numeric.astype(np.float64)
-        self._data_string = data_string.astype(str)
-        self._index = index
-        self._columns = columns
-        self._columns_order = columns_order
-        self._file = file
+        self._data_numeric: NDArrayLike[IF] = data["data_numeric"].astype(np.float64)
+        self._data_string: NDArrayLike[np.str_] = data["data_string"].astype(str)
+        self._index: NDArrayLike[IFS] = data["index"]
+        self._columns: NDArrayLike[IFS] = data["columns"]
+        self._columns_order: NDArrayLike[np.int_] = data["columns_order"]
+        self._data = data
 
     @classmethod
-    def from_dataframe(cls, dataframe: pd.DataFrame) -> H5DataFrame:
+    def from_dataframe(cls, dataframe: pd.DataFrame, values: ch.H5Dict[Any]) -> H5DataFrame:
         _data_numeric = dataframe.select_dtypes(include=[np.number, bool])  # type: ignore[list-item]
         _data_string = dataframe.select_dtypes(exclude=[np.number, bool])  # type: ignore[list-item]
 
-        return cls(
-            _data_numeric.values,
-            _data_string.values,
-            np.array(dataframe.index),
-            np.array(dataframe.columns),
-            npi.indices(np.concatenate((_data_numeric.columns, _data_string.columns)), dataframe.columns),
+        ch.write_objects(
+            values,
+            data_numeric=_data_numeric.values,
+            data_string=_data_string.values,
+            index=np.array(dataframe.index),
+            columns=np.array(dataframe.columns),
+            columns_order=npi.indices(np.concatenate((_data_numeric.columns, _data_string.columns)), dataframe.columns),
         )
+
+        return cls(values)
 
     def __repr__(self) -> str:
         data = np.hstack((self._data_numeric[:5], self._data_string[:5]))[:, self._columns_order]
@@ -61,7 +53,7 @@ class H5DataFrame:
         return repr_
 
     def __h5_write__(self, values: ch.H5Dict[Any]) -> None:
-        if self._file is not None:
+        if values is self._data:
             return
 
         ch.write_objects(
@@ -75,35 +67,14 @@ class H5DataFrame:
 
     @classmethod
     def __h5_read__(cls, values: ch.H5Dict[Any]) -> H5DataFrame:
-        return H5DataFrame(
-            values["data_numeric"],
-            values["data_string"],
-            values["index"],
-            values["columns"],
-            values["columns_order"],
-            file=values,
-        )
+        return H5DataFrame(data=values)
 
     # endregion
 
     # region attributes
     @property
-    def is_backed(self) -> bool:
-        """
-        Is this VDataFrame backed on a h5 file ?
-
-        Returns:
-            Is this VDataFrame backed on a h5 file ?
-        """
-        return self._file is not None
-
-    @property
-    def file(self) -> ch.H5Dict[Any] | None:
-        """
-        Get the h5 file this VDataFrame is backed on.
-        :return: the h5 file this VDataFrame is backed on.
-        """
-        return self._file
+    def data(self) -> ch.H5Dict[Any]:
+        return self._data
 
     @property
     def index(self) -> pd.Index:
@@ -130,5 +101,15 @@ class H5DataFrame:
     @property
     def shape(self) -> tuple[int, int]:
         return len(self._index), len(self._columns)
+
+    # endregion
+
+    # region methods
+    def to_pandas(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            np.hstack((self._data_numeric, self._data_string), dtype=object)[:, self._columns_order],
+            index=self.index,
+            columns=self.columns,
+        )
 
     # endregion

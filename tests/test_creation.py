@@ -1,3 +1,8 @@
+import tempfile
+from pathlib import Path
+from typing import Generator
+
+import ch5mpy as ch
 import numpy as np
 import pandas as pd
 import pytest
@@ -6,10 +11,13 @@ from h5dataframe import H5DataFrame
 
 
 @pytest.fixture
-def h5df() -> H5DataFrame:
-    return H5DataFrame.from_dataframe(
-        pd.DataFrame({"col_int": [1, 2, 3], "col_str": ["a", "bc", "def"], "col_float": [1.5, 2.5, 3.5]})
-    )
+def h5df() -> Generator[H5DataFrame, None, None]:
+    with tempfile.NamedTemporaryFile() as path:
+        values = ch.H5Dict(ch.File(Path(path.name), mode=ch.H5Mode.READ_WRITE_CREATE))
+
+        yield H5DataFrame.from_dataframe(
+            pd.DataFrame({"col_int": [1, 2, 3], "col_str": ["a", "bc", "def"], "col_float": [1.5, 2.5, 3.5]}), values
+        )
 
 
 def test_can_create_from_pandas_DataFrame(h5df: H5DataFrame) -> None:
@@ -32,3 +40,13 @@ def test_has_correct_repr(h5df: H5DataFrame) -> None:
         "2     3.0     def       3.5\n"
         "[3 rows x 3 columns]"
     )
+
+
+def test_convert_to_pandas(h5df: H5DataFrame) -> None:
+    df = h5df.to_pandas()
+
+    assert isinstance(df, pd.DataFrame)
+    assert np.array_equal(df.index, [0, 1, 2])
+    assert np.array_equal(df.columns, ["col_int", "col_str", "col_float"])
+    assert np.array_equal(df.col_int, [1, 2, 3])
+    assert np.array_equal(df.col_str, ["a", "bc", "def"])

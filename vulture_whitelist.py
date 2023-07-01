@@ -1,2 +1,3 @@
-_.from_dataframe  # unused method (h5dataframe/dataframe.py:44)
-_.is_backed  # unused property (h5dataframe/dataframe.py:90)
+_.from_dataframe  # unused method (h5dataframe/dataframe.py:33)
+_.shape  # unused property (h5dataframe/dataframe.py:108)
+_.to_pandas  # unused method (h5dataframe/dataframe.py:115)
