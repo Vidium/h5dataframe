@@ -104,6 +104,36 @@ class H5DataFrame(pd.DataFrame):
 
         return pd.Series(_data, index=np.array(self._index))
 
+    def __setitem__(self, key: str, values: Any) -> None:
+        key = str(key)
+
+        if key in self._columns:
+            _index = int(self._columns_order[np.where(self._columns == key)])  # type: ignore[arg-type]
+
+            if _index < self._data_numeric.shape[1]:
+                self._data_numeric[:, _index] = values
+
+            else:
+                self._data_string[:, _index - self._data_numeric.shape[1]] = values
+
+            return
+
+        values = np.array(values)
+        if values.dtype == object:
+            values = values.astype(str)
+
+        self._columns = np.insert(self._columns, len(self._columns), key)
+
+        if np.issubdtype(values.dtype, str):
+            self._data_string = np.insert(self._data_string, self._data_string.shape[1], values, axis=1)
+            self._columns_order = np.insert(self._columns_order, len(self._columns_order), len(self._columns_order))
+
+        else:
+            self._data_numeric = np.insert(self._data_numeric, self._data_numeric.shape[1], values, axis=1)
+
+            idx = self._data_numeric.shape[1]
+            self._columns_order = np.insert(self._columns_order, len(self._columns_order), idx - 1)
+
     def __h5_write__(self, values: ch.H5Dict[Any]) -> None:
         if values is self._data:
             return
