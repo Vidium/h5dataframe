@@ -15,7 +15,7 @@ def h5df() -> Generator[H5DataFrame, None, None]:
     with tempfile.NamedTemporaryFile() as path:
         values = ch.H5Dict(ch.File(Path(path.name), mode=ch.H5Mode.READ_WRITE_CREATE))
 
-        yield H5DataFrame.from_dataframe(
+        yield H5DataFrame.from_pandas(
             pd.DataFrame({"col_int": [1, 2, 3], "col_str": ["a", "bc", "def"], "col_float": [1.5, 2.5, 3.5]}), values
         )
 
