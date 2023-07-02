@@ -39,6 +39,7 @@ namespace_packages = true
 
 [[tool.mypy.overrides]]
 module = [
-    'numpy_indexed'
+    'numpy_indexed',
+    'h5py'
 ]
 ignore_missing_imports = true

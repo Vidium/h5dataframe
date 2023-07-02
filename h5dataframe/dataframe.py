@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any, Collection
 
 import ch5mpy as ch
 import numpy as np
+import numpy.typing as npt
 import numpy_indexed as npi
 import pandas as pd
 
 from h5dataframe._typing import IF, IFS, NDArrayLike
 
 
-class H5DataFrame:
+class H5DataFrame(pd.DataFrame):
     """
     Proxy for pandas DataFrames for storing data in an hdf5 file.
     """
@@ -38,6 +40,8 @@ class H5DataFrame:
         self._columns_order = columns_order
         self._data = data
 
+        self._item_cache: dict[Any, Any] = {}
+
     @classmethod
     def from_pandas(cls, dataframe: pd.DataFrame, values: ch.H5Dict[Any] | None = None) -> H5DataFrame:
         if isinstance(dataframe, H5DataFrame):
@@ -58,14 +62,17 @@ class H5DataFrame:
                 columns=_columns,
                 columns_order=_columns_order,
             )
+            return cls(
+                values["data_numeric"],
+                values["data_string"],
+                values["index"],
+                values["columns"],
+                values["columns_order"],
+                values,
+            )
 
         return cls(
-            _data_numeric.values.astype(np.float64),
-            _data_string.values.astype(str),
-            _index,
-            _columns,
-            _columns_order,
-            values,
+            _data_numeric.values.astype(np.float64), _data_string.values.astype(str), _index, _columns, _columns_order
         )
 
     def __repr__(self) -> str:
@@ -76,6 +83,26 @@ class H5DataFrame:
 
     def __len__(self) -> int:
         return len(self._index)
+
+    def __dir__(self) -> Iterable[str]:
+        return dir(H5DataFrame) + list(self._columns)  # type: ignore[arg-type]
+
+    def __getattr__(self, key: str) -> Any:
+        if key in object.__getattribute__(self, "_columns"):
+            return self[key]
+
+        raise AttributeError
+
+    def __getitem__(self, key: str) -> pd.Series[Any]:  # type: ignore[override]
+        key = str(key)
+        _index = int(self._columns_order[np.where(self._columns == key)])  # type: ignore[arg-type]
+
+        if _index < self._data_numeric.shape[1]:
+            _data: npt.NDArray[IFS] = np.array(self._data_numeric[:, _index])
+        else:
+            _data = np.array(self._data_string[:, _index - self._data_numeric.shape[1]])
+
+        return pd.Series(_data, index=np.array(self._index))
 
     def __h5_write__(self, values: ch.H5Dict[Any]) -> None:
         if values is self._data:
@@ -136,10 +163,6 @@ class H5DataFrame:
     @columns.setter
     def columns(self, values: Collection[IFS]) -> None:
         raise NotImplementedError
-
-    @property
-    def shape(self) -> tuple[int, int]:
-        return len(self._index), len(self._columns)
 
     # endregion
 

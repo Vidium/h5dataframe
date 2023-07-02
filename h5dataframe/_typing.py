@@ -4,7 +4,7 @@ import ch5mpy as ch
 import numpy as np
 import numpy.typing as npt
 
-_T = TypeVar("_T", bound=np.generic)
+_T = TypeVar("_T", bound=np.generic, covariant=True)
 
 IF = Union[np.int_, np.float_]
 IFS = Union[np.int_, np.float_, np.str_]

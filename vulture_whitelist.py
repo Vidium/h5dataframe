@@ -1,4 +1,4 @@
-_.from_pandas  # unused method (h5dataframe/dataframe.py:41)
-_.empty  # unused property (h5dataframe/dataframe.py:107)
-_.shape  # unused property (h5dataframe/dataframe.py:140)
-_.to_pandas  # unused method (h5dataframe/dataframe.py:147)
+_._item_cache  # unused attribute (h5dataframe/dataframe.py:42)
+_.from_pandas  # unused method (h5dataframe/dataframe.py:44)
+_.empty  # unused property (h5dataframe/dataframe.py:127)
+_.to_pandas  # unused method (h5dataframe/dataframe.py:163)

@@ -50,3 +50,7 @@ def test_convert_to_pandas(h5df: H5DataFrame) -> None:
     assert np.array_equal(df.columns, ["col_int", "col_str", "col_float"])
     assert np.array_equal(df.col_int, [1, 2, 3])
     assert np.array_equal(df.col_str, ["a", "bc", "def"])
+
+
+def test_can_get_column_from_getattr(h5df: H5DataFrame) -> None:
+    assert np.array_equal(h5df.col_str, ["a", "bc", "def"])
