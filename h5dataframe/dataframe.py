@@ -74,6 +74,9 @@ class H5DataFrame:
         repr_ += f"\n[{len(self._index)} rows x {len(self._columns)} columns]"
         return repr_
 
+    def __len__(self) -> int:
+        return len(self._index)
+
     def __h5_write__(self, values: ch.H5Dict[Any]) -> None:
         if values is self._data:
             return
@@ -97,6 +100,13 @@ class H5DataFrame:
             values["columns_order"],
             data=values,
         )
+
+    # endregion
+
+    # region predicates
+    @property
+    def empty(self) -> bool:
+        return not len(self._index) and not len(self._columns)
 
     # endregion
 
