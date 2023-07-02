@@ -133,7 +133,7 @@ class H5DataFrame(pd.DataFrame):
     # region predicates
     @property
     def empty(self) -> bool:
-        return not len(self._index) and not len(self._columns)
+        return not len(self._index) or not len(self._columns)
 
     # endregion
 
