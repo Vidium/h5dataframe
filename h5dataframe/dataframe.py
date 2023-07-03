@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Collection
+from pathlib import Path
+from typing import Any, Hashable, Literal
 
 import ch5mpy as ch
 import numpy as np
-import numpy.typing as npt
-import numpy_indexed as npi
 import pandas as pd
+from pandas.core.arrays import ExtensionArray
+from pandas.core.generic import NDFrame
 
-from h5dataframe._typing import IF, IFS, NDArrayLike
+from h5dataframe._typing import IFS, NDArrayLike
+from h5dataframe.manager import ArrayManager
 
 
 class H5DataFrame(pd.DataFrame):
@@ -17,191 +18,92 @@ class H5DataFrame(pd.DataFrame):
     Proxy for pandas DataFrames for storing data in an hdf5 file.
     """
 
-    __slots__ = "_data_numeric", "_data_string", "_index", "_columns", "_columns_order", "_data"
+    _internal_names = ["_data_file"] + pd.DataFrame._internal_names  # type: ignore[attr-defined]
+    _internal_names_set = {"_data_file"} | pd.DataFrame._internal_names_set  # type: ignore[attr-defined]
+
+    _data_file: ch.H5Dict[Any] | None
 
     # region magic methods
     def __init__(
         self,
-        data_numeric: NDArrayLike[IF],
-        data_string: NDArrayLike[np.str_],
-        index: NDArrayLike[IFS],
-        columns: NDArrayLike[IFS],
-        columns_order: NDArrayLike[np.int_],
-        data: ch.H5Dict[Any] | None = None,
+        data: dict[Hashable, NDArrayLike[Any] | ExtensionArray] | ch.H5Dict[Any] | None = None,
+        index: NDArrayLike[IFS] | None = None,
+        columns: NDArrayLike[IFS] | None = None,
     ):
-        """
-        Args:
-            file: an optional h5py group where this VDataFrame is read from.
-        """
-        self._data_numeric = data_numeric
-        self._data_string = data_string
-        self._index = index
-        self._columns = columns
-        self._columns_order = columns_order
-        self._data = data
+        if isinstance(data, ch.H5Dict):
+            assert index is None
+            assert columns is None
 
-        self._item_cache: dict[Any, Any] = {}
+            _index: pd.Index | None = pd.Index(data["index"])
+            _columns: pd.Index | None = pd.Index(data["arrays"].keys())
+            arrays = [arr for arr in data["arrays"].values()]
+            file = data
+
+        elif isinstance(data, dict):
+            assert columns is None
+            _columns = pd.Index(data.keys())
+            arrays = list(data.values())
+            _index = pd.RangeIndex(start=0, stop=arrays[0].shape[0]) if index is None else pd.Index(index)
+            file = None
+
+        elif data is None:
+            _index = None if index is None else pd.Index(index)
+            _columns = None if columns is None else pd.Index(columns)
+            arrays = []
+            file = None
+
+        mgr = ArrayManager(arrays, [_index, _columns])
+        object.__setattr__(self, "_data_file", file)
+
+        NDFrame.__init__(self, mgr)  # type: ignore[call-arg]
 
     @classmethod
     def from_pandas(cls, dataframe: pd.DataFrame, values: ch.H5Dict[Any] | None = None) -> H5DataFrame:
         if isinstance(dataframe, H5DataFrame):
             return dataframe
 
-        _data_numeric = dataframe.select_dtypes(include=[np.number, bool])  # type: ignore[list-item]
-        _data_string = dataframe.select_dtypes(exclude=[np.number, bool])  # type: ignore[list-item]
         _index = np.array(dataframe.index)
-        _columns = np.array(dataframe.columns)
-        _columns_order = npi.indices(np.concatenate((_data_numeric.columns, _data_string.columns)), dataframe.columns)
+        _arrays = {col.name: col.values for _, col in dataframe.items()}
 
         if values is not None:
-            ch.write_objects(
-                values,
-                data_numeric=_data_numeric.values.astype(np.float64),
-                data_string=_data_string.values.astype(str),
-                index=_index,
-                columns=_columns,
-                columns_order=_columns_order,
-            )
-            return cls(
-                values["data_numeric"],
-                values["data_string"],
-                values["index"],
-                values["columns"],
-                values["columns_order"],
-                values,
-            )
+            values["index"] = _index
+            values["arrays"] = _arrays
 
-        return cls(
-            _data_numeric.values.astype(np.float64), _data_string.values.astype(str), _index, _columns, _columns_order
-        )
+            return cls(values)
+
+        return cls(_arrays, index=_index)  # type: ignore[arg-type]
 
     def __repr__(self) -> str:
-        data = np.hstack((self._data_numeric[:5], self._data_string[:5]))[:, self._columns_order]
-        repr_ = repr(pd.DataFrame(data, index=self.index, columns=self.columns))
-        repr_ += f"\n[{len(self._index)} rows x {len(self._columns)} columns]"
-        return repr_
-
-    def __len__(self) -> int:
-        return len(self._index)
-
-    def __dir__(self) -> Iterable[str]:
-        return dir(H5DataFrame) + list(self._columns)  # type: ignore[arg-type]
-
-    def __getattr__(self, key: str) -> Any:
-        if key in object.__getattribute__(self, "_columns"):
-            return self[key]
-
-        raise AttributeError
-
-    def __getitem__(self, key: str) -> pd.Series[Any]:  # type: ignore[override]
-        key = str(key)
-        _index = int(self._columns_order[np.where(self._columns == key)])  # type: ignore[arg-type]
-
-        if _index < self._data_numeric.shape[1]:
-            _data: npt.NDArray[IFS] = np.array(self._data_numeric[:, _index])
-        else:
-            _data = np.array(self._data_string[:, _index - self._data_numeric.shape[1]])
-
-        return pd.Series(_data, index=np.array(self._index))
-
-    def __setitem__(self, key: str, values: Any) -> None:
-        key = str(key)
-
-        if key in self._columns:
-            _index = int(self._columns_order[np.where(self._columns == key)])  # type: ignore[arg-type]
-
-            if _index < self._data_numeric.shape[1]:
-                self._data_numeric[:, _index] = values
-
-            else:
-                self._data_string[:, _index - self._data_numeric.shape[1]] = values
-
-            return
-
-        values = np.array(values)
-        if values.dtype == object:
-            values = values.astype(str)
-
-        self._columns = np.insert(self._columns, len(self._columns), key)
-
-        if np.issubdtype(values.dtype, str):
-            self._data_string = np.insert(self._data_string, self._data_string.shape[1], values, axis=1)
-            self._columns_order = np.insert(self._columns_order, len(self._columns_order), len(self._columns_order))
-
-        else:
-            self._data_numeric = np.insert(self._data_numeric, self._data_numeric.shape[1], values, axis=1)
-
-            idx = self._data_numeric.shape[1]
-            self._columns_order = np.insert(self._columns_order, len(self._columns_order), idx - 1)
+        return repr(self.iloc[:5].copy()) + f"\n[{len(self.index)} rows x {len(self.columns)} columns]"
 
     def __h5_write__(self, values: ch.H5Dict[Any]) -> None:
         if values is self._data:
             return
 
-        ch.write_objects(
-            values,
-            data_numeric=self._data_numeric,
-            data_string=self._data_string,
-            index=self._index,
-            columns=self._columns,
-            columns_order=self._columns,
-        )
+        values["index"] = self.index
+        values["arrays"] = self.to_dict(orient="list")
 
     @classmethod
     def __h5_read__(cls, values: ch.H5Dict[Any]) -> H5DataFrame:
-        return H5DataFrame(
-            values["data_numeric"],
-            values["data_string"],
-            values["index"],
-            values["columns"],
-            values["columns_order"],
-            data=values,
-        )
-
-    # endregion
-
-    # region predicates
-    @property
-    def empty(self) -> bool:
-        return not len(self._index) or not len(self._columns)
+        return H5DataFrame(values)
 
     # endregion
 
     # region attributes
     @property
     def data(self) -> ch.H5Dict[Any] | None:
-        return self._data
-
-    @property
-    def index(self) -> pd.Index:
-        """
-        Get the index.
-        """
-        return pd.Index(self._index)
-
-    @index.setter
-    def index(self, values: Collection[IFS]) -> None:
-        self._index[()] = values
-
-    @property
-    def columns(self) -> pd.Index:
-        """
-        Get the columns.
-        """
-        return pd.Index(self._columns)
-
-    @columns.setter
-    def columns(self, values: Collection[IFS]) -> None:
-        raise NotImplementedError
+        return self._data_file
 
     # endregion
 
     # region methods
-    def to_pandas(self) -> pd.DataFrame:
-        return pd.DataFrame(
-            np.hstack((self._data_numeric, self._data_string), dtype=object)[:, self._columns_order],
-            index=self.index,
-            columns=self.columns,
-        )
+    @classmethod
+    def read(
+        cls, path: str | Path | ch.H5Dict[Any], mode: Literal[ch.H5Mode.READ, ch.H5Mode.READ_WRITE] = ch.H5Mode.READ
+    ) -> H5DataFrame:
+        if not isinstance(path, ch.H5Dict):
+            path = ch.H5Dict.read(path, mode=mode)
+
+        return cls.__h5_read__(path)
 
     # endregion

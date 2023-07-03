@@ -6,6 +6,5 @@ import numpy.typing as npt
 
 _T = TypeVar("_T", bound=np.generic, covariant=True)
 
-IF = Union[np.int_, np.float_]
 IFS = Union[np.int_, np.float_, np.str_]
 NDArrayLike = Union[npt.NDArray[_T], ch.H5Array[_T]]
