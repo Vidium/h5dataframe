@@ -1,6 +1,6 @@
 # h5dataframe
 
-Drop-in replacement for pandas DataFrames that allows to store data on an hdf5 file and manipulate data directly from that h5df file without loading it in memory.
+Drop-in replacement for pandas DataFrames that allows to store data on an hdf5 file and manipulate data directly from that hdf5 file without loading it in memory.
 
 # Warning !
 
@@ -30,7 +30,7 @@ r3  3  6
 [3 rows x 2 columns]
 ```
 
-At this point, all the data is still loaded in RAM, as indicated by the second-to-last line. To write the data to an h5df file, use the `H5DataFrame.write()` method.
+At this point, all the data is still loaded in RAM, as indicated by the second-to-last line. To write the data to an hdf5 file, use the `H5DataFrame.write()` method.
 
 ```python
 >>> hdf.write('path/to/file.h5')
@@ -43,9 +43,9 @@ r3  3  6
 [3 rows x 2 columns]
 ```
 
-The `H5DataFrame` is now backed on an h5df file, only loading data in RAM when requested.
+The `H5DataFrame` is now backed on an hdf5 file, only loading data in RAM when requested.
 
-Alternatively, an `H5DataFrame` can be read directly from an previously created h5df file with the `H5DataFrame.read()` method.
+Alternatively, an `H5DataFrame` can be read directly from an previously created hdf5 file with the `H5DataFrame.read()` method.
 
 ```python
 >>> from h5dataframe import H5Mode
