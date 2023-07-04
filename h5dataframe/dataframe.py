@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any, Hashable, Literal
 
@@ -26,7 +27,7 @@ class H5DataFrame(pd.DataFrame):
     # region magic methods
     def __init__(
         self,
-        data: dict[Hashable, NDArrayLike[Any] | ExtensionArray] | ch.H5Dict[Any] | None = None,
+        data: pd.DataFrame | dict[Hashable, NDArrayLike[Any] | ExtensionArray] | ch.H5Dict[Any] | None = None,
         index: NDArrayLike[IFS] | None = None,
         columns: NDArrayLike[IFS] | None = None,
     ):
@@ -38,6 +39,12 @@ class H5DataFrame(pd.DataFrame):
             _columns: pd.Index | None = pd.Index(data["arrays"].keys())
             arrays = [arr for arr in data["arrays"].values()]
             file = data
+
+        elif isinstance(data, pd.DataFrame):
+            _index = data.index if index is None else pd.Index(index)
+            _columns = data.columns if columns is None else pd.Index(columns)
+            arrays = [np.array(arr) for arr in data.to_dict(orient="list").values()]
+            file = None
 
         elif isinstance(data, dict):
             assert columns is None
@@ -52,29 +59,21 @@ class H5DataFrame(pd.DataFrame):
             arrays = []
             file = None
 
+        else:
+            raise TypeError(f"Invalid type '{type(data)}' for 'data' argument.")
+
         mgr = ArrayManager(arrays, [_index, _columns])
         object.__setattr__(self, "_data_file", file)
 
         NDFrame.__init__(self, mgr)  # type: ignore[call-arg]
 
-    @classmethod
-    def from_pandas(cls, dataframe: pd.DataFrame, values: ch.H5Dict[Any] | None = None) -> H5DataFrame:
-        if isinstance(dataframe, H5DataFrame):
-            return dataframe
-
-        _index = np.array(dataframe.index)
-        _arrays = {col.name: col.values for _, col in dataframe.items()}
-
-        if values is not None:
-            values["index"] = _index
-            values["arrays"] = _arrays
-
-            return cls(values)
-
-        return cls(_arrays, index=_index)  # type: ignore[arg-type]
-
     def __repr__(self) -> str:
-        return repr(self.iloc[:5].copy()) + f"\n[{len(self.index)} rows x {len(self.columns)} columns]"
+        repr_ = repr(self.iloc[:5].copy())
+        if self.empty:
+            return repr_
+
+        re.sub(r"\n\n\[.*\]$", "", repr_)
+        return repr_ + f"\n\n[{len(self.index)} rows x {len(self.columns)} columns]"
 
     def __h5_write__(self, values: ch.H5Dict[Any]) -> None:
         if values is self._data:
@@ -105,5 +104,22 @@ class H5DataFrame(pd.DataFrame):
             path = ch.H5Dict.read(path, mode=mode)
 
         return cls.__h5_read__(path)
+
+    def write(self, file: str | Path | ch.File | ch.Group | ch.H5Dict[Any], name: str = "") -> None:
+        if not isinstance(file, (ch.H5Dict, ch.Group)):
+            file = ch.File(file, mode=ch.H5Mode.WRITE_TRUNCATE)
+
+        if not isinstance(file, ch.H5Dict):
+            file = ch.H5Dict(file)
+
+        ch.write_object(file, name, self)
+
+        if self._data_file is None:
+            mgr = ArrayManager(
+                [arr for arr in file["arrays"].values()], [pd.Index(file["index"]), pd.Index(file["arrays"].keys())]
+            )
+            self._data_file = file
+
+            NDFrame.__init__(self, mgr)  # type: ignore[call-arg]
 
     # endregion

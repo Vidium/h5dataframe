@@ -1,23 +1,7 @@
-import tempfile
-from pathlib import Path
-from typing import Generator
-
-import ch5mpy as ch
 import numpy as np
 import pandas as pd
-import pytest
 
 from h5dataframe import H5DataFrame
-
-
-@pytest.fixture
-def h5df() -> Generator[H5DataFrame, None, None]:
-    with tempfile.NamedTemporaryFile() as path:
-        values = ch.H5Dict(ch.File(Path(path.name), mode=ch.H5Mode.READ_WRITE_CREATE))
-
-        yield H5DataFrame.from_pandas(
-            pd.DataFrame({"col_int": [1, 2, 3], "col_str": ["a", "bc", "def"], "col_float": [1.5, 2.5, 3.5]}), values
-        )
 
 
 def test_can_create_from_pandas_DataFrame(h5df: H5DataFrame) -> None:
@@ -25,15 +9,16 @@ def test_can_create_from_pandas_DataFrame(h5df: H5DataFrame) -> None:
 
 
 def test_has_correct_columns(h5df: H5DataFrame) -> None:
-    assert np.array_equal(h5df.columns, ["col_float", "col_int", "col_str"])
+    assert np.array_equal(h5df.columns, ["col_int", "col_str", "col_float"])
 
 
 def test_has_correct_repr(h5df: H5DataFrame) -> None:
     assert (
-        repr(h5df) == "   col_float  col_int col_str\n"
-        "0        1.5        1       a\n"
-        "1        2.5        2      bc\n"
-        "2        3.5        3     def\n"
+        repr(h5df) == "   col_int col_str  col_float\n"
+        "0        1       a        1.5\n"
+        "1        2      bc        2.5\n"
+        "2        3     def        3.5\n"
+        "\n"
         "[3 rows x 3 columns]"
     )
 
@@ -43,7 +28,7 @@ def test_convert_to_pandas(h5df: H5DataFrame) -> None:
 
     assert isinstance(df, pd.DataFrame)
     assert np.array_equal(df.index, [0, 1, 2])
-    assert np.array_equal(df.columns, ["col_float", "col_int", "col_str"])
+    assert np.array_equal(df.columns, ["col_int", "col_str", "col_float"])
     assert np.array_equal(df.col_int, [1, 2, 3])
     assert np.array_equal(df.col_str, ["a", "bc", "def"])
 
@@ -68,7 +53,7 @@ def test_can_set_new_column_int(h5df: H5DataFrame) -> None:
 
 
 def test_can_set_column_no_index() -> None:
-    h5df = H5DataFrame.from_pandas(pd.DataFrame(columns=["value"]))
+    h5df = H5DataFrame(pd.DataFrame(columns=["value"]))
     h5df["value"] = [1, 2, 3]
 
     assert np.array_equal(h5df["value"], [1, 2, 3])

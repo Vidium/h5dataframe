@@ -9,7 +9,7 @@ from h5dataframe import H5DataFrame
 
 
 def test_can_write() -> None:
-    h5df = H5DataFrame.from_pandas(
+    h5df = H5DataFrame(
         pd.DataFrame(
             {"col_int": [1, 2, 3], "col_str": ["a", "bc", "def"], "col_float": [1.5, 2.5, 3.5]}, index=["a", "b", "c"]
         )

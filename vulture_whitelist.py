@@ -1,5 +1,4 @@
-IF  # unused variable (h5dataframe/_typing.py:9)
 _.setitem  # unused method (h5dataframe/block.py:26)
-_.from_pandas  # unused method (h5dataframe/dataframe.py:58)
-_._verify_integrity  # unused method (h5dataframe/manager.py:79)
-_.__repr__  # unused attribute (h5dataframe/patch.py:5)
+_.write  # unused method (h5dataframe/dataframe.py:108)
+_._verify_integrity  # unused method (h5dataframe/manager.py:76)
+_.__repr__  # unused attribute (h5dataframe/patch.py:25)
