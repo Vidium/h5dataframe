@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "h5dataframe"
-description = "Proxy for pandas DataFrames that allows to store data on an hdf5 file."
-version = "0.1rc1"
+description = "Drop-in replacement for pandas DataFrames that allows to store data on an hdf5 file and manipulate data directly from that h5df file without loading it in memory."
+version = "0.1"
 requires-python = ">=3.7"
 license = {file = "LICENSE"}
 authors = [
@@ -18,11 +18,33 @@ readme = {file = "README.md", content-type="text/markdown"}
 dependencies = [
     "ch5mpy",
     "numpy",
-    "numpy_indexed",
     "pandas>=2.0.3",
 ]
-keywords = []
-classifiers = []
+keywords = [
+    "h5df",
+    "h5py",
+    "pandas",
+    "dataframe",
+    "data manipulation",
+    "storage"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: CeCILL-B Free Software License Agreement (CECILL-B)",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed"
+]
+
+[project.urls]
+Source = "https://github.com/Vidium/h5dataframe"
 
 [tool.setuptools.packages.find]
 include = ["h5dataframe*"]
