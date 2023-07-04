@@ -18,7 +18,7 @@ def test_has_correct_repr(h5df: H5DataFrame) -> None:
         "0        1       a        1.5\n"
         "1        2      bc        2.5\n"
         "2        3     def        3.5\n"
-        "\n"
+        "[FILE]\n"
         "[3 rows x 3 columns]"
     )
 

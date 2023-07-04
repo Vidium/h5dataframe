@@ -73,7 +73,10 @@ class H5DataFrame(pd.DataFrame):
             return repr_
 
         re.sub(r"\n\n\[.*\]$", "", repr_)
-        return repr_ + f"\n\n[{len(self.index)} rows x {len(self.columns)} columns]"
+        return (
+            repr_ + f"\n{'[RAM]' if self._data_file is None else '[FILE]'}\n"
+            f"[{len(self.index)} rows x {len(self.columns)} columns]"
+        )
 
     def __h5_write__(self, values: ch.H5Dict[Any]) -> None:
         if values is self._data:
