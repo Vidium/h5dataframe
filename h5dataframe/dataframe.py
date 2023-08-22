@@ -6,6 +6,7 @@ from typing import Any, Hashable, Literal
 
 import ch5mpy as ch
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from pandas.core.arrays import ExtensionArray
 from pandas.core.generic import NDFrame
@@ -27,9 +28,13 @@ class H5DataFrame(pd.DataFrame):
     # region magic methods
     def __init__(
         self,
-        data: pd.DataFrame | dict[Hashable, NDArrayLike[Any] | ExtensionArray] | ch.H5Dict[Any] | None = None,
-        index: NDArrayLike[IFS] | None = None,
-        columns: NDArrayLike[IFS] | None = None,
+        data: pd.DataFrame
+        | dict[Hashable, NDArrayLike[Any] | ExtensionArray]
+        | ch.H5Dict[Any]
+        | npt.NDArray[Any]
+        | None = None,
+        index: NDArrayLike[IFS] | pd.Index | None = None,
+        columns: NDArrayLike[IFS] | pd.Index | None = None,
     ):
         if isinstance(data, ch.H5Dict):
             assert index is None
@@ -44,6 +49,12 @@ class H5DataFrame(pd.DataFrame):
             _index = data.index if index is None else pd.Index(index)
             _columns = data.columns if columns is None else pd.Index(columns)
             arrays = [np.array(arr) for arr in data.to_dict(orient="list").values()]
+            file = None
+
+        elif isinstance(data, np.ndarray):
+            _index = pd.RangeIndex(start=0, stop=data.shape[0]) if index is None else pd.Index(index)
+            _columns = pd.RangeIndex(start=0, stop=data.shape[1]) if columns is None else pd.Index(columns)
+            arrays = [col for col in data.T]
             file = None
 
         elif isinstance(data, dict):
