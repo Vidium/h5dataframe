@@ -41,7 +41,7 @@ class H5DataFrame(pd.DataFrame):
             assert columns is None
 
             _index: pd.Index[Any] | None = pd.Index(data["index"])
-            _columns: pd.Index[Any] | None = pd.Index(data["arrays"].keys())
+            _columns: pd.Index[Any] | None = pd.Index(data["arrays"].keys(), data.attributes["columns_dtype"])
             arrays = [arr for arr in data["arrays"].values()]
             file = data
 
@@ -93,6 +93,7 @@ class H5DataFrame(pd.DataFrame):
         if values is self._data:
             return
 
+        values.attributes["columns_dtype"] = self.columns.dtype
         values["index"] = self.index
         values["arrays"] = self.to_dict(orient="list")
 

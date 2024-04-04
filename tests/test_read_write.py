@@ -32,6 +32,7 @@ def test_can_read() -> None:
 
         values["index"] = ["a", "b", "c"]
         values["arrays"] = {"col_int": [1, 2, 3], "col_str": ["a", "bc", "def"]}
+        values.attributes["columns_dtype"] = np.str_
 
         hdf5 = H5DataFrame.read(values)
         assert np.array_equal(hdf5.index, ["a", "b", "c"])
