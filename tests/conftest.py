@@ -1,6 +1,5 @@
 import tempfile
 from pathlib import Path
-from typing import Generator
 
 import ch5mpy as ch
 import pandas as pd
@@ -10,7 +9,7 @@ from h5dataframe import H5DataFrame
 
 
 @pytest.fixture
-def hdf5() -> Generator[H5DataFrame, None, None]:
+def hdf5() -> H5DataFrame:
     with tempfile.NamedTemporaryFile() as path:
         values = ch.H5Dict(ch.File(Path(path.name), mode=ch.H5Mode.READ_WRITE_CREATE))
 

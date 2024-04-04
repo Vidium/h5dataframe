@@ -5,13 +5,12 @@ from typing import Any
 import ch5mpy as ch
 import numpy as np
 import numpy.typing as npt
-from pandas._libs.internals import BlockValuesRefs  # type: ignore[import]
-from pandas.core.internals.blocks import Block  # type: ignore[import]
+from pandas._libs.internals import BlockValuesRefs  # type: ignore[import-untyped]
+from pandas.core.internals.blocks import Block  # type: ignore[import-untyped]
 from pandas.core.internals.blocks import new_block as pd_new_block
 
 
 class H5Block:
-
     # region magic methods
     def __init__(self, values: ch.H5Array[Any], ndim: int, placement: slice, refs: None) -> None:
         assert isinstance(placement, slice)

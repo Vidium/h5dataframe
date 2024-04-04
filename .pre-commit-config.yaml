@@ -23,14 +23,14 @@ repos:
         args: [--disable=all, --enable=unused-import]
         language_version: python3.9
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.4.1
-    hooks:
-      - id: mypy
-        exclude: (^tests/)|(vulture_whitelist.py)|(^docs/)
-        args: [--strict]
-        additional_dependencies: [pandas-stubs, ch5mpy]
-        language_version: python3.10
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.4.1
+  #   hooks:
+  #     - id: mypy
+  #       exclude: (^tests/)|(vulture_whitelist.py)|(^docs/)
+  #       args: [--strict]
+  #       additional_dependencies: [pandas-stubs, ch5mpy]
+  #       language_version: python3.10
 
   - repo: local
     hooks:

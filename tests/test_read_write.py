@@ -18,7 +18,7 @@ def test_can_write() -> None:
     with tempfile.NamedTemporaryFile() as path:
         values = ch.H5Dict(ch.File(Path(path.name), mode=ch.H5Mode.WRITE_TRUNCATE))
 
-        ch.write_object(values, "", hdf5)
+        ch.write_object(hdf5, values, "")
 
         assert set(values.keys()) == {"index", "arrays"}
         assert np.array_equal(values["index"], ["a", "b", "c"])

@@ -33,15 +33,15 @@ class H5DataFrame(pd.DataFrame):
         | ch.H5Dict[Any]
         | npt.NDArray[Any]
         | None = None,
-        index: NDArrayLike[IFS] | pd.Index | None = None,
-        columns: NDArrayLike[IFS] | pd.Index | None = None,
+        index: NDArrayLike[IFS] | pd.Index[Any] | None = None,
+        columns: NDArrayLike[IFS] | pd.Index[Any] | None = None,
     ):
         if isinstance(data, ch.H5Dict):
             assert index is None
             assert columns is None
 
-            _index: pd.Index | None = pd.Index(data["index"])
-            _columns: pd.Index | None = pd.Index(data["arrays"].keys())
+            _index: pd.Index[Any] | None = pd.Index(data["index"])
+            _columns: pd.Index[Any] | None = pd.Index(data["arrays"].keys())
             arrays = [arr for arr in data["arrays"].values()]
             file = data
 
@@ -126,7 +126,7 @@ class H5DataFrame(pd.DataFrame):
         if not isinstance(file, ch.H5Dict):
             file = ch.H5Dict(file)
 
-        ch.write_object(file, name, self)
+        ch.write_object(self, file, name)
 
         if self._data_file is None:
             mgr = ArrayManager(

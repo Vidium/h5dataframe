@@ -1,70 +1,36 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "h5dataframe"
+version = "0.1.0"
 description = "Drop-in replacement for pandas DataFrames that allows to store data on an hdf5 file and manipulate data directly from that hdf5 file without loading it in memory."
-version = "0.1"
-requires-python = ">=3.7"
-license = {file = "LICENSE"}
-authors = [
-    {name = "Matteo Bouvier", email = "m.bouvier@vidium-solutions.com"}
-]
-maintainers = [
-    {name = "Matteo Bouvier", email = "m.bouvier@vidium-solutions.com"}
-]
-readme = {file = "README.md", content-type="text/markdown"}
-dependencies = [
-    "ch5mpy",
-    "numpy",
-    "pandas>=2.0.3",
-]
-keywords = [
-    "hdf5",
-    "h5py",
-    "pandas",
-    "dataframe",
-    "data manipulation",
-    "storage"
-]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "License :: CeCILL-B Free Software License Agreement (CECILL-B)",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Topic :: Scientific/Engineering",
-    "Typing :: Typed"
-]
+authors = ["Matteo Bouvier <m.bouvier@vidium-solutions.com>"]
+license = "CeCILL-B"
+readme = "README.md"
 
-[project.urls]
-Source = "https://github.com/Vidium/h5dataframe"
+[tool.poetry.dependencies]
+python = "^3.9"
+ch5mpy = { path = "/home/mbouvier/git/ch5mpy", develop = true }
+pandas = "^2.2"
 
-[tool.setuptools.packages.find]
-include = ["h5dataframe*"]
 
-[tool.vulture]
-paths = ["h5dataframe", "vulture_whitelist.py"]
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+mypy = "^1.9.0"
+pandas-stubs = "^2.2.1.240316"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 120
 
+[tool.vulture]
+paths = ["h5dataframe", "vulture_whitelist.py"]
+
 [tool.mypy]
 strict = true
-namespace_packages = true
-disable_error_code = [
-    "method-assign"
-]
+disable_error_code = ["method-assign"]
 
 [[tool.mypy.overrides]]
-module = [
-    'numpy_indexed',
-    'h5py'
-]
+module = ['numpy_indexed', 'h5py']
 ignore_missing_imports = true

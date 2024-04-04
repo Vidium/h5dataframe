@@ -4,13 +4,14 @@ import ch5mpy as ch
 import numpy as np
 from pandas.core.arrays import ExtensionArray
 from pandas.core.dtypes.generic import ABCDataFrame, ABCSeries  # type: ignore[attr-defined]
-from pandas.core.internals.array_manager import ArrayManager as pd_ArrayManager  # type: ignore[import]
+from pandas.core.internals.array_manager import ArrayManager as pd_ArrayManager  # type: ignore[import-untyped]
 from pandas.core.internals.array_manager import BaseArrayManager as pd_BaseArrayManager
-from pandas.core.internals.blocks import ensure_block_shape  # type: ignore[import]
+from pandas.core.internals.blocks import ensure_block_shape  # type: ignore[import-untyped]
 
 from h5dataframe.block import new_block
 
 T = TypeVar("T", bound=pd_BaseArrayManager)
+
 
 # patch for support of H5Arrays
 def apply_with_block(self: T, f: str, align_keys: list[str] | None = None, swap_axis: bool = True, **kwargs: Any) -> T:
@@ -71,7 +72,6 @@ pd_BaseArrayManager.apply_with_block = apply_with_block
 
 
 class ArrayManager(pd_ArrayManager):  # type: ignore[misc]
-
     # region methods
     def _verify_integrity(self) -> None:
         n_rows, n_columns = self.shape_proper
