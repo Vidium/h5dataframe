@@ -95,7 +95,7 @@ class H5DataFrame(pd.DataFrame):
 
         values.attributes["columns_dtype"] = self.columns.dtype
         values["index"] = self.index
-        values["arrays"] = self.to_dict(orient="list")
+        values["arrays"] = {str(k): v for k, v in self.to_dict(orient="list").items()}
 
     @classmethod
     def __h5_read__(cls, values: ch.H5Dict[Any]) -> H5DataFrame:
