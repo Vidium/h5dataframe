@@ -9,10 +9,10 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 
-# Comment with new infra
-ch5mpy = { git = "git@gilab.vidium.fr:vidium/ch5mpy.git", branch = "master" }
-# Uncomment with new infra
-# ch5mpy = { git = "git@git.vidium.solutions:vidium/ch5mpy.git", branch = "master" }
+# Uncomment with old infra
+# ch5mpy = { git = "git@gilab.vidium.fr:vidium/ch5mpy.git", branch = "master" }
+# Comment with old infra
+ch5mpy = { git = "git@git.vidium.solutions:vidium/ch5mpy.git", branch = "master" }
 
 pandas = "^2.2"
 
