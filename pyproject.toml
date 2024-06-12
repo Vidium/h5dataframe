@@ -12,7 +12,7 @@ python = "^3.10"
 # Uncomment with old infra
 # ch5mpy = { git = "git@gilab.vidium.fr:vidium/ch5mpy.git", branch = "master" }
 # Comment with old infra
-ch5mpy = { git = "git@git.vidium.solutions:vidium/ch5mpy.git", branch = "master" }
+ch5mpy = { git = "git@git.vidium.solutions:vidium/ch5mpy.git", branch = "test_ci_cd" }
 
 pandas = "^2.2"
 
