@@ -10,6 +10,7 @@ import numpy.typing as npt
 import pandas as pd
 from pandas.core.arrays import ExtensionArray
 from pandas.core.generic import NDFrame
+from pandas._libs import index as libindex
 
 from h5dataframe._typing import IFS, NDArrayLike
 from h5dataframe.manager import ArrayManager
@@ -138,3 +139,16 @@ class H5DataFrame(pd.DataFrame):
             NDFrame.__init__(self, mgr)  # type: ignore[call-arg]
 
     # endregion
+
+
+def engine_h5_wrapper(engine: libindex.IndexEngine):
+    def pass_numpy_array(values: np.ndarray | ch.H5Array):
+        if isinstance(values, ch.H5Array):
+            values = values.copy()
+
+        return engine(values)
+
+    return pass_numpy_array
+
+
+pd.Index._engine_types = {dtype: engine_h5_wrapper(engine) for dtype, engine in pd.Index._engine_types.items()}
