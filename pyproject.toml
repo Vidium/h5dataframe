@@ -7,7 +7,7 @@ license = "CeCILL-B"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 ch5mpy = { git = "git@gitlab.vidium.fr:vidium/ch5mpy.git", branch = "master" }
 pandas = "^2.2"
 
