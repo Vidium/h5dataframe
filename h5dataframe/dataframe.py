@@ -10,10 +10,13 @@ import numpy.typing as npt
 import pandas as pd
 from pandas.core.arrays import ExtensionArray
 from pandas.core.generic import NDFrame
-from pandas._libs import index as libindex
+
+# from pandas._libs import index as libindex
+from pandas.core.internals.construction import arrays_to_mgr
 
 from h5dataframe._typing import IFS, NDArrayLike
-from h5dataframe.manager import ArrayManager
+
+# from h5dataframe.manager import ArrayManager
 
 
 class H5DataFrame(pd.DataFrame):
@@ -41,8 +44,8 @@ class H5DataFrame(pd.DataFrame):
             assert index is None
             assert columns is None
 
-            _index: pd.Index[Any] | None = pd.Index(data["index"])
-            _columns: pd.Index[Any] | None = pd.Index(data["arrays"].keys(), data.attributes["columns_dtype"])
+            _index: pd.Index[Any] = pd.Index(data["index"].copy())
+            _columns: pd.Index[Any] = pd.Index(data["arrays"].keys(), data.attributes["columns_dtype"])
             arrays = [arr for arr in data["arrays"].values()]
             file = data
 
@@ -66,15 +69,15 @@ class H5DataFrame(pd.DataFrame):
             file = None
 
         elif data is None:
-            _index = None if index is None else pd.Index(index)
-            _columns = None if columns is None else pd.Index(columns)
+            _index = pd.RangeIndex(0) if index is None else pd.Index(index)
+            _columns = pd.RangeIndex(0) if columns is None else pd.Index(columns)
             arrays = []
             file = None
 
         else:
             raise TypeError(f"Invalid type '{type(data)}' for 'data' argument.")
 
-        mgr = ArrayManager(arrays, [_index, _columns])
+        mgr = arrays_to_mgr(arrays, _columns, _index, typ="array")
         object.__setattr__(self, "_data_file", file)
 
         NDFrame.__init__(self, mgr)  # type: ignore[call-arg]
@@ -131,24 +134,14 @@ class H5DataFrame(pd.DataFrame):
         ch.write_object(self, file, name)
 
         if self._data_file is None:
-            mgr = ArrayManager(
-                [arr for arr in file["arrays"].values()], [pd.Index(file["index"]), pd.Index(file["arrays"].keys())]
+            mgr = arrays_to_mgr(
+                [arr for arr in file["arrays"].values()],
+                pd.Index(file["arrays"].keys()),
+                pd.Index(file["index"].copy()),
+                typ="array",
             )
             self._data_file = file
 
             NDFrame.__init__(self, mgr)  # type: ignore[call-arg]
 
     # endregion
-
-
-def engine_h5_wrapper(engine: libindex.IndexEngine):
-    def pass_numpy_array(values: np.ndarray | ch.H5Array):
-        if isinstance(values, ch.H5Array):
-            values = values.copy()
-
-        return engine(values)
-
-    return pass_numpy_array
-
-
-pd.Index._engine_types = {dtype: engine_h5_wrapper(engine) for dtype, engine in pd.Index._engine_types.items()}

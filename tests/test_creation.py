@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import pytest
 
 from h5dataframe import H5DataFrame
 
@@ -60,7 +59,6 @@ def test_can_set_column_no_index() -> None:
     assert np.array_equal(hdf5["value"], [1, 2, 3])
 
 
-@pytest.mark.xfail
 def test_set_value_sets_in_h5_file(hdf5: H5DataFrame) -> None:
     hdf5.loc[1, "col_str"] = "test"
     assert np.array_equal(hdf5._data_file["arrays"]["col_str"], ["a", "test", "def"])
