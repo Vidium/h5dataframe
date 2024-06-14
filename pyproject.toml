@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "h5dataframe"
-version = "0.1.0"
+version = "0.1.1"
 description = "Drop-in replacement for pandas DataFrames that allows to store data on an hdf5 file and manipulate data directly from that hdf5 file without loading it in memory."
 authors = ["Matteo Bouvier <m.bouvier@vidium-solutions.com>"]
 license = "CeCILL-B"
