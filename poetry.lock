@@ -21,7 +21,7 @@ typing-extensions = "^4.9.0"
 type = "git"
 url = "git@gitlab.vidium.fr:vidium/ch5mpy.git"
 reference = "master"
-resolved_reference = "1676829d94d79e0e47f926a891048b6c1f81f4ca"
+resolved_reference = "7624a28912faefb782b07953d745b641ef791f46"
 
 [[package]]
 name = "colorama"

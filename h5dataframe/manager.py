@@ -520,7 +520,7 @@ class H5ArrayManager(BaseArrayManager):
         result = np.empty(self.shape_proper, dtype=dtype)
 
         for i, arr in enumerate(self.arrays):
-            arr = arr.astype(dtype, copy=copy)
+            arr = arr.astype(arr.dtype, copy=copy)
             result[:, i] = arr
 
         if na_value is not lib.no_default:
