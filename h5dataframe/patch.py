@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Callable
 
 import ch5mpy as ch
-
+import pandas.io.formats.format as fmt
 from pandas import Series
 
 
