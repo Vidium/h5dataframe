@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import pandas as pd
 from h5dataframe.dataframe import H5DataFrame
@@ -13,3 +14,17 @@ def test_loc_multi(hdf5: H5DataFrame) -> None:
 
 def test_get_column(hdf5: H5DataFrame) -> None:
     assert hdf5["col_str"].equals(pd.Series(["a", "bc", "def"], name="col_str"))
+
+
+def test_get_column_regular_df(hdf5: H5DataFrame):
+    df = pd.DataFrame({"col_str": ["a", "bc", "def"]})
+    assert df["col_str"].equals(pd.Series(["a", "bc", "def"], name="col_str"))
+
+    assert hdf5["col_str"].equals(df["col_str"])
+
+
+@pytest.mark.xfail
+def test_compare_with_regular_df(hdf5: H5DataFrame):
+    # TODO: maybe one day find a fix, for now can only use h5dataframe.equals(), pd.DataFrame.equals() fails
+    df = pd.DataFrame({"col_str": ["a", "bc", "def"]})
+    assert df["col_str"].equals(hdf5["col_str"])

@@ -2,21 +2,16 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any, Hashable, Literal
+from typing import Any, Callable, Hashable, Literal
 
 import ch5mpy as ch
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from pandas.core.arrays import ExtensionArray
 from pandas.core.generic import NDFrame
 
-# from pandas._libs import index as libindex
-from pandas.core.internals.construction import arrays_to_mgr
-
 from h5dataframe._typing import IFS, NDArrayLike
-
-# from h5dataframe.manager import ArrayManager
+from h5dataframe.manager import H5ArrayManager
 
 
 class H5DataFrame(pd.DataFrame):
@@ -30,13 +25,48 @@ class H5DataFrame(pd.DataFrame):
     _data_file: ch.H5Dict[Any] | None
 
     # region magic methods
+    @property
+    def _constructor(self) -> Callable[..., H5DataFrame]:
+        def inner(df: H5DataFrame) -> H5DataFrame:
+            if not isinstance(df, pd.DataFrame):
+                raise ValueError("H5DataFrame constructor not properly called")
+
+            return df
+
+        return inner
+
+    def _constructor_from_mgr(self, mgr, axes) -> DataFrame:
+        if not isinstance(mgr, H5ArrayManager):
+            df = pd.DataFrame._from_mgr(mgr, axes=axes)
+        else:
+            df = H5DataFrame._from_mgr(mgr, axes=axes)
+
+        if isinstance(self, pd.DataFrame):
+            # This would also work `if self._constructor is DataFrame`, but
+            #  this check is slightly faster, benefiting the most-common case.
+            return df
+
+        elif type(self).__name__ == "GeoDataFrame":
+            # Shim until geopandas can override their _constructor_from_mgr
+            #  bc they have different behavior for Managers than for DataFrames
+            return self._constructor(mgr)
+
+        # We assume that the subclass __init__ knows how to handle a
+        #  pd.DataFrame object.
+        return self._constructor(df)
+
+    def _constructor_sliced_from_mgr(self, mgr, axes) -> pd.Series:
+        ser = pd.Series._from_mgr(mgr, axes)
+        ser._name = None  # caller is responsible for setting real name
+
+        if isinstance(self, pd.DataFrame):
+            return ser
+
+        return self._constructor_sliced(ser)
+
     def __init__(
         self,
-        data: pd.DataFrame
-        | dict[Hashable, NDArrayLike[Any] | ExtensionArray]
-        | ch.H5Dict[Any]
-        | npt.NDArray[Any]
-        | None = None,
+        data: pd.DataFrame | dict[Hashable, NDArrayLike[Any]] | ch.H5Dict[Any] | npt.NDArray[Any] | None = None,
         index: NDArrayLike[IFS] | pd.Index[Any] | None = None,
         columns: NDArrayLike[IFS] | pd.Index[Any] | None = None,
     ):
@@ -45,14 +75,21 @@ class H5DataFrame(pd.DataFrame):
             assert columns is None
 
             _index: pd.Index[Any] = pd.Index(data["index"].copy())
-            _columns: pd.Index[Any] = pd.Index(data["arrays"].keys(), data.attributes["columns_dtype"])
-            arrays = [arr for arr in data["arrays"].values()]
+            _columns: pd.Index[Any] = pd.Index(data["arrays"].keys(), dtype=data.attributes["columns_dtype"])
+            arrays: list[NDArrayLike[Any]] = [arr for arr in data["arrays"].values()]
             file = data
 
         elif isinstance(data, pd.DataFrame):
             _index = data.index if index is None else pd.Index(index)
             _columns = data.columns if columns is None else pd.Index(columns)
-            arrays = [np.array(arr) for arr in data.to_dict(orient="list").values()]
+
+            # FIXME: SOMETIMES only does not work once then works, can't debug WTF
+            #  ValueError: Does not understand character buffer dtype format string ('w')
+            try:
+                arrays = [np.array(arr) for arr in data.to_dict(orient="list").values()]
+            except ValueError:
+                arrays = [np.array(arr) for arr in data.to_dict(orient="list").values()]
+
             file = None
 
         elif isinstance(data, np.ndarray):
@@ -77,10 +114,18 @@ class H5DataFrame(pd.DataFrame):
         else:
             raise TypeError(f"Invalid type '{type(data)}' for 'data' argument.")
 
-        mgr = arrays_to_mgr(arrays, _columns, _index, typ="array")
+        mgr = H5ArrayManager(arrays, [_index, _columns])
         object.__setattr__(self, "_data_file", file)
 
         NDFrame.__init__(self, mgr)  # type: ignore[call-arg]
+
+    def __finalize__(self, other, method: str | None = None, **kwargs) -> pd.DataFrame:
+        super().__finalize__(other, method, **kwargs)
+
+        if method == "copy":
+            return other
+
+        return self
 
     def __repr__(self) -> str:
         repr_ = repr(self.iloc[:5].copy())
@@ -98,7 +143,8 @@ class H5DataFrame(pd.DataFrame):
             return
 
         values.attributes["columns_dtype"] = self.columns.dtype
-        values["index"] = self.index
+        # TODO: fix typing in ch5mpy
+        values["index"] = self.index.values
         values["arrays"] = {str(k): v for k, v in self.to_dict(orient="list").items()}
 
     @classmethod
@@ -134,11 +180,9 @@ class H5DataFrame(pd.DataFrame):
         ch.write_object(self, file, name)
 
         if self._data_file is None:
-            mgr = arrays_to_mgr(
+            mgr = H5ArrayManager(
                 [arr for arr in file["arrays"].values()],
-                pd.Index(file["arrays"].keys()),
-                pd.Index(file["index"].copy()),
-                typ="array",
+                [pd.Index(file["index"].copy()), pd.Index(file["arrays"].keys())],
             )
             self._data_file = file
 
