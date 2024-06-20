@@ -9,6 +9,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from pandas.core.generic import NDFrame
+from pandas.core.internals.array_manager import BaseArrayManager  # type: ignore[import-untyped]
 
 from h5dataframe._typing import IFS, NDArrayLike
 from h5dataframe.manager import H5ArrayManager
@@ -35,11 +36,11 @@ class H5DataFrame(pd.DataFrame):
 
         return inner
 
-    def _constructor_from_mgr(self, mgr, axes) -> DataFrame:
+    def _constructor_from_mgr(self, mgr: BaseArrayManager, axes: list[pd.Index[Any]]) -> pd.DataFrame:
         if not isinstance(mgr, H5ArrayManager):
-            df = pd.DataFrame._from_mgr(mgr, axes=axes)
+            df: pd.DataFrame = pd.DataFrame._from_mgr(mgr, axes=axes)  # type: ignore[attr-defined]
         else:
-            df = H5DataFrame._from_mgr(mgr, axes=axes)
+            df = H5DataFrame._from_mgr(mgr, axes=axes)  # type: ignore[attr-defined]
 
         if isinstance(self, pd.DataFrame):
             # This would also work `if self._constructor is DataFrame`, but
@@ -55,8 +56,8 @@ class H5DataFrame(pd.DataFrame):
         #  pd.DataFrame object.
         return self._constructor(df)
 
-    def _constructor_sliced_from_mgr(self, mgr, axes) -> pd.Series:
-        ser = pd.Series._from_mgr(mgr, axes)
+    def _constructor_sliced_from_mgr(self, mgr: BaseArrayManager, axes: list[pd.Index[Any]]) -> pd.Series[Any]:
+        ser: pd.Series[Any] = pd.Series._from_mgr(mgr, axes)  # type: ignore[attr-defined]
         ser._name = None  # caller is responsible for setting real name
 
         if isinstance(self, pd.DataFrame):
@@ -119,7 +120,7 @@ class H5DataFrame(pd.DataFrame):
 
         NDFrame.__init__(self, mgr)  # type: ignore[call-arg]
 
-    def __finalize__(self, other, method: str | None = None, **kwargs) -> pd.DataFrame:
+    def __finalize__(self, other: H5DataFrame, method: str | None = None, **kwargs: Any) -> pd.DataFrame:  # type: ignore[override]
         super().__finalize__(other, method, **kwargs)
 
         if method == "copy":

@@ -7,7 +7,7 @@ description = "Collection of helper tools for reading or writing to h5 files usi
 optional = false
 python-versions = "^3.10"
 files = []
-develop = false
+develop = true
 
 [package.dependencies]
 h5py = "*"
@@ -18,10 +18,8 @@ tqdm = "*"
 typing-extensions = "^4.9.0"
 
 [package.source]
-type = "git"
-url = "git@gitlab.vidium.fr:vidium/ch5mpy.git"
-reference = "master"
-resolved_reference = "7624a28912faefb782b07953d745b641ef791f46"
+type = "directory"
+url = "../ch5mpy"
 
 [[package]]
 name = "colorama"
@@ -469,4 +467,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "33a4c3f3ba47db0fbbbff8d5903143f1ded96201c639a8cd5fee797a13683bb6"
+content-hash = "160759de8b290ca46431229fef54e540b23bb69a7c5d0f1ea7733fa3eb23cf3b"
