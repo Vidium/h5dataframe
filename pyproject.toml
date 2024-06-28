@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "h5dataframe"
-version = "0.2.0"
+version = "0.2.1"
 description = "Drop-in replacement for pandas DataFrames that allows to store data on an hdf5 file and manipulate data directly from that hdf5 file without loading it in memory."
 authors = ["Matteo Bouvier <m.bouvier@vidium-solutions.com>"]
 license = "CeCILL-B"
@@ -8,9 +8,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-ch5mpy = { git = "git@gitlab.vidium.fr:vidium/ch5mpy.git", branch = "master" }
 pandas = "^2.2"
 pandas-stubs = "^2.2.2.240603"
+ch5mpy = "^0.4.4"
 
 
 [tool.poetry.group.dev.dependencies]

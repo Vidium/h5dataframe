@@ -2,24 +2,22 @@
 
 [[package]]
 name = "ch5mpy"
-version = "0.4.3"
+version = "0.4.4"
 description = "Collection of helper tools for reading or writing to h5 files using the h5py library."
 optional = false
-python-versions = "^3.10"
-files = []
-develop = true
+python-versions = "<4.0,>=3.10"
+files = [
+    {file = "ch5mpy-0.4.4-py3-none-any.whl", hash = "sha256:93779d2a80119bac1113967a3f04e8de00efb5d0065cc840279858bddc39673e"},
+    {file = "ch5mpy-0.4.4.tar.gz", hash = "sha256:8563240133a7a5d5f5769b0a280507eea0c76dfc0c3ee237dcd8d1a5a46917ec"},
+]
 
 [package.dependencies]
 h5py = "*"
-h5py-stubs = "^0.1.1"
+h5py-stubs = ">=0.1.1,<0.2.0"
 numpy = "*"
-packaging = "^21.3"
+packaging = ">=21.3,<22.0"
 tqdm = "*"
-typing-extensions = "^4.9.0"
-
-[package.source]
-type = "directory"
-url = "../ch5mpy"
+typing-extensions = ">=4.9.0,<5.0.0"
 
 [[package]]
 name = "colorama"
@@ -467,4 +465,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "160759de8b290ca46431229fef54e540b23bb69a7c5d0f1ea7733fa3eb23cf3b"
+content-hash = "02db6da934f2e2bb8d7b74c54b35a398d7e3e226e463bb659fba1bc8caf23f75"
