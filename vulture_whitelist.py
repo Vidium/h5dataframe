@@ -1,4 +1,7 @@
 _.setitem  # unused method (h5dataframe/block.py:25)
+_._ndarray  # unused property (h5dataframe/categorical.py:46)
+_._dtype  # unused property (h5dataframe/categorical.py:50)
+_.write  # unused method (h5dataframe/categorical.py:57)
 _._constructor_from_mgr  # unused method (h5dataframe/dataframe.py:39)
 _._constructor_sliced_from_mgr  # unused method (h5dataframe/dataframe.py:59)
 _._name  # unused attribute (h5dataframe/dataframe.py:61)

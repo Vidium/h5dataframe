@@ -118,7 +118,7 @@ class H5ArrayManager(BaseArrayManager):  # type: ignore[misc]
         axis = self._normalize_axis(axis)
 
         if axis == 0:
-            arrays = [arr[slobj] for arr in self.arrays]
+            arrays: list[NDArrayLike[Any]] = [arr[slobj] for arr in self.arrays]
 
         elif axis == 1:
             arrays = self.arrays[slobj]
