@@ -10,7 +10,7 @@ readme = "README.md"
 python = "^3.10"
 pandas = "^2.2"
 pandas-stubs = "^2.2.2.240603"
-ch5mpy = { git = "git@gitlab.vidium.fr:vidium/ch5mpy.git" }
+ch5mpy = { git = "git@git.vidium.solutions:vidium/ch5mpy.git" }
 
 
 [tool.poetry.group.dev.dependencies]
